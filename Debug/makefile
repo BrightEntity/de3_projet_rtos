@@ -86,8 +86,8 @@ all: main-build
 main-build: FreeRTOS_Project_st.elf secondary-outputs
 
 # Tool invocations
-FreeRTOS_Project_st.elf: $(OBJS) $(USER_OBJS) C:\Users\Aymeric\STM32CubeIDE\workspace_1.6.0\FreeRTOS_Project_st\STM32F429ZITX_FLASH.ld makefile objects.list $(OPTIONAL_TOOL_DEPS)
-	arm-none-eabi-gcc -o "FreeRTOS_Project_st.elf" @"objects.list" $(USER_OBJS) $(LIBS) -mcpu=cortex-m4 -T"C:\Users\Aymeric\STM32CubeIDE\workspace_1.6.0\FreeRTOS_Project_st\STM32F429ZITX_FLASH.ld" --specs=nosys.specs -Wl,-Map="FreeRTOS_Project_st.map" -Wl,--gc-sections -static -Wl,--start-group -lmyLib -Wl,--end-group -L../Lib --specs=nano.specs -mfpu=fpv4-sp-d16 -mfloat-abi=hard -mthumb -u _printf_float -Wl,--start-group -lc -lm -Wl,--end-group
+FreeRTOS_Project_st.elf: $(OBJS) $(USER_OBJS) C:\Users\Aymeric\Documents\Telecom\DE3\Conception_des_systemes_embarques_temps_reel\de3_projet_rtos\STM32F429ZITX_FLASH.ld makefile objects.list $(OPTIONAL_TOOL_DEPS)
+	arm-none-eabi-gcc -o "FreeRTOS_Project_st.elf" @"objects.list" $(USER_OBJS) $(LIBS) -mcpu=cortex-m4 -T"C:\Users\Aymeric\Documents\Telecom\DE3\Conception_des_systemes_embarques_temps_reel\de3_projet_rtos\STM32F429ZITX_FLASH.ld" --specs=nosys.specs -Wl,-Map="FreeRTOS_Project_st.map" -Wl,--gc-sections -static -Wl,--start-group -lmyLib -Wl,--end-group -L../Lib --specs=nano.specs -mfpu=fpv4-sp-d16 -mfloat-abi=hard -mthumb -u _printf_float -Wl,--start-group -lc -lm -Wl,--end-group
 	@echo 'Finished building target: $@'
 	@echo ' '
 

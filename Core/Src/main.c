@@ -175,6 +175,13 @@ int main(void)
 	BSP_LCD_SetFont(&Font16);
 	BSP_LCD_SetBackColor(LCD_COLOR_WHITE);
 	BSP_LCD_SetTextColor(LCD_B_TELECOM);
+	I2C_Scan(&hi2c3, adresse); // On fait un deuxième scan pour détecter l'activation du magnétomètre
+	uint8_t hal_mem = 0;
+	uint16_t hal_ax, hal_ay, hal_az, hal_omegax, hal_omegay, hal_omegaz, hal_Bx, hal_By, hal_Bz, hal_temperature, hal_pression;
+
+	if(HAL_I2C_Mem_Read(&hi2c3, MPU_ADD, WHO_AM_I_MPU9250, sizeof(char), &hal_mem, sizeof(uint8_t), 1000) == HAL_ERROR) {
+		Error_Handler();
+	}
 
   /* Call init function for freertos objects (in freertos.c) */
  // MX_FREERTOS_Init();
@@ -186,11 +193,32 @@ int main(void)
   /* USER CODE BEGIN WHILE */
   while (1)
   {
+	  Measure_T(&hi2c3, &hal_temperature);
 
 
+	  HAL_I2C_Mem_Read(&hi2c3, MPU_ADD, ACCEL_XOUT_L, 1, &hal_ax, 2, 1.5);
+	  HAL_I2C_Mem_Read(&hi2c3, MPU_ADD, ACCEL_YOUT_L, 1, &hal_ay, 2, 1.5);
+	  HAL_I2C_Mem_Read(&hi2c3, MPU_ADD, ACCEL_ZOUT_L, 1, &hal_az, 2, 1.5);
+
+	  HAL_I2C_Mem_Read(&hi2c3, MPU_ADD, GYRO_XOUT_L, 1, &hal_omegax, 2, 1.5);
+	  HAL_I2C_Mem_Read(&hi2c3, MPU_ADD, GYRO_YOUT_L, 1, &hal_omegay, 2, 1.5);
+	  HAL_I2C_Mem_Read(&hi2c3, MPU_ADD, GYRO_ZOUT_L, 1, &hal_omegaz, 2, 1.5);
+
+	  HAL_I2C_Mem_Read(&hi2c3, MAGNETO_ADD, ACCEL_XOUT_L, 1, &hal_Bx, 2, 1.5);
+	  HAL_I2C_Mem_Read(&hi2c3, MAGNETO_ADD, ACCEL_YOUT_L, 1, &hal_By, 2, 1.5);
+	  HAL_I2C_Mem_Read(&hi2c3, MAGNETO_ADD, ACCEL_ZOUT_L, 1, &hal_Bz, 2, 1.5);
+
+	  HAL_I2C_Mem_Read(&hi2c3, MPU_ADD, TEMP_OUT_L, 1, &hal_temperature, 2, 1.5);
+	  HAL_I2C_Mem_Read(&hi2c3, MAGNETO_ADD, TEMP_OUT_L, 1, &hal_pression, 2, 1.5);
+
+	  printf("A(%d; %d; %d) | Omega(%d; %d; %d) | B(%d; %d; %d) | Temperature : %d | Pression : %d  \r\n", hal_ax, hal_ay, hal_az, hal_omegax, hal_omegay, hal_omegaz, hal_Bx, hal_By, hal_Bz, hal_temperature, hal_pression);
+
+	  HAL_Delay(1000);
     /* USER CODE END WHILE */
 
+
     /* USER CODE BEGIN 3 */
+
   }
   /* USER CODE END 3 */
 }
