@@ -75,6 +75,31 @@ void MX_FREERTOS_Init(void);
 /* USER CODE BEGIN 0 */
 uint32_t RTOS_RunTimeCounter;
 
+void Calib_G(I2C_HandleTypeDef* hi2c3, double* p_g) {
+	p_g[0] = 0;
+	p_g[1] = 0;
+	p_g[2] = 0;
+
+	double p_bias_zero[3];
+	p_bias_zero[0] = 0;
+	p_bias_zero[1] = 0;
+	p_bias_zero[2] = 0;
+
+	double p_g_item[3];
+
+	for (int i = 0; i < 100; ++i) {
+		Measure_G(hi2c3, p_g_item, p_bias_zero);
+		p_g[0] = p_g[0] + p_g_item[0];
+		p_g[1] = p_g[1] + p_g_item[1];
+		p_g[2] = p_g[2] +  p_g_item[2];
+		HAL_Delay(10);
+	}
+
+	p_g[0] /= 100;
+	p_g[1] /= 100;
+	p_g[2] /= 100;
+}
+
 void RTOS_AppConfigureTimerForRuntimeStats(void)
 {
   RTOS_RunTimeCounter = 0;
@@ -171,13 +196,21 @@ int main(void)
 	char adresse[10];
 	I2C_Scan(&hi2c3, adresse);
 	Init_BMP280(&hi2c3);
-	Init_MPU9250(&hi2c3);
+	Init_MPU9250_AK8963(&hi2c3);
 	BSP_LCD_SetFont(&Font16);
 	BSP_LCD_SetBackColor(LCD_COLOR_WHITE);
 	BSP_LCD_SetTextColor(LCD_B_TELECOM);
 	I2C_Scan(&hi2c3, adresse); // On fait un deuxième scan pour détecter l'activation du magnétomètre
 	uint8_t hal_mem = 0;
-	uint16_t hal_ax, hal_ay, hal_az, hal_omegax, hal_omegay, hal_omegaz, hal_Bx, hal_By, hal_Bz, hal_temperature, hal_pression;
+	double p_acc[3], p_mag[3], p_gyro[3], p_bias[3], p_scale[3], p_theta, p_press;
+	long signed int p_Tfine;
+	p_bias[0] = 0;
+	p_bias[1] = 0;
+	p_bias[2] = 0;
+
+	p_scale[0] = 1;
+	p_scale[0] = 1;
+	p_scale[0] = 1;
 
 	if(HAL_I2C_Mem_Read(&hi2c3, MPU_ADD, WHO_AM_I_MPU9250, sizeof(char), &hal_mem, sizeof(uint8_t), 1000) == HAL_ERROR) {
 		Error_Handler();
@@ -187,31 +220,26 @@ int main(void)
  // MX_FREERTOS_Init();
   /* Start scheduler */
  // osKernelStart();
+	Measure_G(&hi2c3, p_gyro, p_bias);
+	printf("Vitesse angulaire avant calibration : Omega(%.2f, %.2f, %.2f)\r\n", p_gyro[0], p_gyro[1], p_gyro[2]);
+	Calib_G(&hi2c3, p_bias);
+	Measure_G(&hi2c3, p_gyro, p_bias);
+	printf("Vitesse angulaire après calibration : Omega(%.2f, %.2f, %.2f)\r\n", p_gyro[0], p_gyro[1], p_gyro[2]);
 
   /* We should never get here as control is now taken by the scheduler */
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
   while (1)
   {
-	  Measure_T(&hi2c3, &hal_temperature);
 
+	  Measure_A(&hi2c3, p_acc);
+	  Measure_G(&hi2c3, p_gyro, p_bias);
+	  Measure_M(&hi2c3, p_mag, p_bias, p_scale);
+	  Measure_T_BMP280(&hi2c3, &p_theta, &p_Tfine);
+	  Measure_T(&hi2c3, &p_theta);
+	  Measure_P(&hi2c3, &p_press, &p_Tfine);
 
-	  HAL_I2C_Mem_Read(&hi2c3, MPU_ADD, ACCEL_XOUT_L, 1, &hal_ax, 2, 1.5);
-	  HAL_I2C_Mem_Read(&hi2c3, MPU_ADD, ACCEL_YOUT_L, 1, &hal_ay, 2, 1.5);
-	  HAL_I2C_Mem_Read(&hi2c3, MPU_ADD, ACCEL_ZOUT_L, 1, &hal_az, 2, 1.5);
-
-	  HAL_I2C_Mem_Read(&hi2c3, MPU_ADD, GYRO_XOUT_L, 1, &hal_omegax, 2, 1.5);
-	  HAL_I2C_Mem_Read(&hi2c3, MPU_ADD, GYRO_YOUT_L, 1, &hal_omegay, 2, 1.5);
-	  HAL_I2C_Mem_Read(&hi2c3, MPU_ADD, GYRO_ZOUT_L, 1, &hal_omegaz, 2, 1.5);
-
-	  HAL_I2C_Mem_Read(&hi2c3, MAGNETO_ADD, ACCEL_XOUT_L, 1, &hal_Bx, 2, 1.5);
-	  HAL_I2C_Mem_Read(&hi2c3, MAGNETO_ADD, ACCEL_YOUT_L, 1, &hal_By, 2, 1.5);
-	  HAL_I2C_Mem_Read(&hi2c3, MAGNETO_ADD, ACCEL_ZOUT_L, 1, &hal_Bz, 2, 1.5);
-
-	  HAL_I2C_Mem_Read(&hi2c3, MPU_ADD, TEMP_OUT_L, 1, &hal_temperature, 2, 1.5);
-	  HAL_I2C_Mem_Read(&hi2c3, MAGNETO_ADD, TEMP_OUT_L, 1, &hal_pression, 2, 1.5);
-
-	  printf("A(%d; %d; %d) | Omega(%d; %d; %d) | B(%d; %d; %d) | Temperature : %d | Pression : %d  \r\n", hal_ax, hal_ay, hal_az, hal_omegax, hal_omegay, hal_omegaz, hal_Bx, hal_By, hal_Bz, hal_temperature, hal_pression);
+	  printf("A(%.2f; %.2f; %.2f) | Omega(%.2f; %.2f; %.2f) | B(%.2f; %.2f; %.2f) | Temperature : %.2f | Pression : %.2f  \r\n", p_acc[0], p_acc[1], p_acc[2], p_gyro[0], p_gyro[1], p_gyro[2], p_mag[0], p_mag[1], p_mag[2], p_theta, p_press);
 
 	  HAL_Delay(1000);
     /* USER CODE END WHILE */
