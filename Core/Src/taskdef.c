@@ -13,17 +13,97 @@
 
 UART_HandleTypeDef huart1;
 
+static void prvAutoReloadTimerCallback( TimerHandle_t xTimer )
+{
+		TickType_t xTimeNow;
+		 /* Obtain the current tick count. */
+		 xTimeNow = uxTaskGetTickCount();
+		 /* Output a string to show the time at which the callback was executed. */
+		 vPrintStringAndNumber( "Auto-reload timer callback executing", xTimeNow );
+		 ulCallCount++;
+}
+
+
+
+/* La tâche 1A prend les données de l'accéléromètre et du gyromètre toutes les : 1000/100 = 10 ms */
+#define timerAcqAG pdMS_TO_TICKS( 10 )
+/* La tâche 1B prend les données du magnetomètre et du baromètre toutes les : 1000/50 = 20 ms */
+#define timerAcqMB pdMS_TO_TICKS( 20 )
+
+TimerHandle_t xAutoReloadTimer;
+BaseType_t xTimer1Started, xTimer2Started;
+
+/* Create the auto-reload timer, storing the handle to the created timer in xAutoReloadTimer. */
+xAutoReloadTimerAcqAG = xTimerCreate(
+
+		/* Text name for the software timer - not used by FreeRTOS. */
+		"Timer Accel - Gyro",
+		/* The software timer's period in ticks. */
+		timerAcqAG,
+		/* Setting uxAutoRealod to pdTRUE creates an auto-reload timer. */
+		pdTRUE,
+		/* This example does not use the timer id. */
+		0,
+		/* The callback function to be used by the software timer being created. */
+		prvAutoReloadTimerCallback
+
+);
+
+/* Create the auto-reload timer, storing the handle to the created timer in xAutoReloadTimer. */
+xAutoReloadTimerAcqMB = xTimerCreate(
+
+		/* Text name for the software timer - not used by FreeRTOS. */
+		"Timer Magne - Baro",
+		/* The software timer's period in ticks. */
+		timerAcqMB,
+		/* Setting uxAutoRealod to pdTRUE creates an auto-reload timer. */
+		pdTRUE,
+		/* This example does not use the timer id. */
+		0,
+		/* The callback function to be used by the software timer being created. */
+		prvAutoReloadTimerCallback
+
+);
+
+/* Sémaphore gérant l'accès au bus I2C */
+SemaphoreHandle_t SemB0;
+
+/* Queue pour échanger les données entre */
+QueueHandle_t Queue;
+
+
+
 /******************************************/
 /*Tâche de test*/
 void vTask0( void *pvParameters )
 {
 
+	xTaskCreate(vTask1a, "task 1A", 1000, NULL, 3, NULL);
+	printf("task 1A created \r\n");
+
+	xTaskCreate(vTask1b, "task 1B", 1000, NULL, 3, NULL);
+	printf("task 1B created \r\n");
+	/*
+	xTaskCreate(vTask2a, "task 2A", 1000, NULL, 4, NULL);
+	printf("task 2A created \r\n");
+
+	xTaskCreate(vTask2b, "task 2B", 1000, NULL, 4, NULL);
+	printf("task 2B created \r\n");
+
+	xTaskCreate(vTask3, "task 3", 1000, NULL, 5, NULL);
+	printf("task 3 created \r\n");*/
+
+	vTaskDelete(NULL);
+
+
+	/*
 	while(1)
 	{
 		const char *mess = "Task 1 is running";
 
 		BSP_LCD_DisplayStringAt(0, LINE(1), (uint8_t *)mess,CENTER_MODE);	/*print on the LCD screen*/
 
+		/*
 		HAL_GPIO_WritePin(GPIOG,GPIO_PIN_13,GPIO_PIN_SET);
 		HAL_GPIO_WritePin(GPIOG,GPIO_PIN_14,GPIO_PIN_SET);
 		vTaskDelay(pdMS_TO_TICKS(1000));
@@ -32,8 +112,69 @@ void vTask0( void *pvParameters )
 		vTaskDelay(pdMS_TO_TICKS(1000));
 
 		//debugPrintln(&huart1, "Hello World !"); 	/*print full line on a serial terminal*/
+		/*
 		printf("Hello World !\r\n");
+	}*/
+}
+
+void vTask1a( void *pvParameters )
+{
+	while(1)
+		{
+			if( ( xAutoReloadTimerAcqAG != NULL ) )
+			 {
+				/* Start the software timers, using a block time of 0 (no block time). The scheduler has
+				 not been started yet so any block time specified here would be ignored anyway. */
+				 xTimer1Started = xTimerStart( xAutoReloadTimer, 0 );
+
+				 if( ( xTimer1Started == pdPASS ) )
+				  {
+					 printf("Task 1a created !\r\n");
+					 /* Start the scheduler. */
+					 vTaskStartScheduler();
+				  }
+			 }
+		}
+}
+
+void vTask1b( void *pvParameters )
+{
+
+	while(1)
+	{
+			if( ( xAutoReloadTimerAcqMB != NULL ) )
+			{
+				/* Start the software timers, using a block time of 0 (no block time). The scheduler has
+				not been started yet so any block time specified here would be ignored anyway. */
+				xTimer2Started = xTimerStart( xAutoReloadTimer, 0 );
+
+				if( ( xTimer1Started == pdPASS ) )
+				{
+					printf("Task 1b created !\r\n");
+						/* Start the scheduler. */
+						vTaskStartScheduler();
+				}
+			}
 	}
+
+}
+
+void vTask2a( void *pvParameters )
+{
+
+
+}
+
+void vTask2b( void *pvParameters )
+{
+
+
+}
+
+void vTask3( void *pvParameters )
+{
+
+
 }
 
 /******************************************/

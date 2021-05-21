@@ -66,7 +66,6 @@ extern int compteur;*/
 void Error_Handler(void);
 
 /* USER CODE BEGIN EFP */
-void Calib_G(I2C_HandleTypeDef*, double*);
 void debugPrint(UART_HandleTypeDef*, char*);
 void debugPrintln(UART_HandleTypeDef*, char*);
 /* USER CODE END EFP */

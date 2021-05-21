@@ -13,5 +13,10 @@ extern uint32_t RTOS_RunTimeCounter;
 
 //Tasks
 void vTask0( void *);
+void vTask1a( void *);
+void vTask1b( void *);
+void vTask2a( void *);
+void vTask2b( void *);
+void vTask3( void *);
 
 #endif /* TASKDEF_H_ */
