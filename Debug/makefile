@@ -1,6 +1,5 @@
 ################################################################################
 # Automatically-generated file. Do not edit!
-# Toolchain: GNU Tools for STM32 (9-2020-q2-update)
 ################################################################################
 
 -include ../makefile.init
@@ -54,55 +53,49 @@ endif
 
 -include ../makefile.defs
 
-OPTIONAL_TOOL_DEPS := \
-$(wildcard ../makefile.defs) \
-$(wildcard ../makefile.init) \
-$(wildcard ../makefile.targets) \
-
-
-BUILD_ARTIFACT_NAME := FreeRTOS_Project_st
+BUILD_ARTIFACT_NAME := de3_projet_rtos-master
 BUILD_ARTIFACT_EXTENSION := elf
 BUILD_ARTIFACT_PREFIX := 
 BUILD_ARTIFACT := $(BUILD_ARTIFACT_PREFIX)$(BUILD_ARTIFACT_NAME).$(BUILD_ARTIFACT_EXTENSION)
 
 # Add inputs and outputs from these tool invocations to the build variables 
 EXECUTABLES += \
-FreeRTOS_Project_st.elf \
+de3_projet_rtos-master.elf \
 
 SIZE_OUTPUT += \
 default.size.stdout \
 
 OBJDUMP_LIST += \
-FreeRTOS_Project_st.list \
+de3_projet_rtos-master.list \
 
 OBJCOPY_BIN += \
-FreeRTOS_Project_st.bin \
+de3_projet_rtos-master.bin \
 
 
 # All Target
 all: main-build
 
 # Main-build Target
-main-build: FreeRTOS_Project_st.elf secondary-outputs
+main-build: de3_projet_rtos-master.elf secondary-outputs
 
 # Tool invocations
-FreeRTOS_Project_st.elf: $(OBJS) $(USER_OBJS) C:\Users\Aymeric\Documents\Telecom\DE3\Conception_des_systemes_embarques_temps_reel\de3_projet_rtos\STM32F429ZITX_FLASH.ld makefile objects.list $(OPTIONAL_TOOL_DEPS)
-	arm-none-eabi-gcc -o "FreeRTOS_Project_st.elf" @"objects.list" $(USER_OBJS) $(LIBS) -mcpu=cortex-m4 -T"C:\Users\Aymeric\Documents\Telecom\DE3\Conception_des_systemes_embarques_temps_reel\de3_projet_rtos\STM32F429ZITX_FLASH.ld" --specs=nosys.specs -Wl,-Map="FreeRTOS_Project_st.map" -Wl,--gc-sections -static -Wl,--start-group -lmyLib -Wl,--end-group -L../Lib --specs=nano.specs -mfpu=fpv4-sp-d16 -mfloat-abi=hard -mthumb -u _printf_float -Wl,--start-group -lc -lm -Wl,--end-group
+de3_projet_rtos-master.elf: $(OBJS) $(USER_OBJS) C:\Users\remiv\STM32CubeIDE\workspace_1.5.1\de3_projet_rtos-master\STM32F429ZITX_FLASH.ld
+	arm-none-eabi-gcc -o "de3_projet_rtos-master.elf" @"objects.list" $(USER_OBJS) $(LIBS) -mcpu=cortex-m4 -T"C:\Users\remiv\STM32CubeIDE\workspace_1.5.1\de3_projet_rtos-master\STM32F429ZITX_FLASH.ld" --specs=nosys.specs -Wl,-Map="de3_projet_rtos-master.map" -Wl,--gc-sections -static -L../Lib --specs=nano.specs -mfpu=fpv4-sp-d16 -mfloat-abi=hard -mthumb -u _printf_float -Wl,--start-group -lc -lm -Wl,--end-group
 	@echo 'Finished building target: $@'
 	@echo ' '
 
-default.size.stdout: $(EXECUTABLES) makefile objects.list $(OPTIONAL_TOOL_DEPS)
+default.size.stdout: $(EXECUTABLES)
 	arm-none-eabi-size  $(EXECUTABLES)
 	@echo 'Finished building: $@'
 	@echo ' '
 
-FreeRTOS_Project_st.list: $(EXECUTABLES) makefile objects.list $(OPTIONAL_TOOL_DEPS)
-	arm-none-eabi-objdump -h -S $(EXECUTABLES) > "FreeRTOS_Project_st.list"
+de3_projet_rtos-master.list: $(EXECUTABLES)
+	arm-none-eabi-objdump -h -S $(EXECUTABLES) > "de3_projet_rtos-master.list"
 	@echo 'Finished building: $@'
 	@echo ' '
 
-FreeRTOS_Project_st.bin: $(EXECUTABLES) makefile objects.list $(OPTIONAL_TOOL_DEPS)
-	arm-none-eabi-objcopy  -O binary $(EXECUTABLES) "FreeRTOS_Project_st.bin"
+de3_projet_rtos-master.bin: $(EXECUTABLES)
+	arm-none-eabi-objcopy  -O binary $(EXECUTABLES) "de3_projet_rtos-master.bin"
 	@echo 'Finished building: $@'
 	@echo ' '
 
