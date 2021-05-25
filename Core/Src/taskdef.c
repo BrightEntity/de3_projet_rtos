@@ -77,6 +77,41 @@ QueueHandle_t Queue;
 /*Tâche de test*/
 void vTask0( void *pvParameters )
 {
+	QAngle = xQueueCreate(10, sizeof(double) * 3);
+	if(QAngle == NULL) {
+		printf("Erreur de création du message queue angle");
+		exit(1);
+	}
+
+	QAltitude = xQueueCreate(10, sizeof(double));
+	if(QAltitude == NULL) {
+		printf("Erreur de création du message queue altitude");
+		exit(1);
+	}
+
+	QAcceleration = xQueueCreate(20, sizeof(double));
+	if(QAcceleration == NULL) {
+		printf("Erreur de création du message queue accélération");
+		exit(1);
+	}
+
+	QChampMagnetique = xQueueCreate(10, sizeof(double));
+	if(QChampMagnetique == NULL) {
+		printf("Erreur de création du message queue champ magnétique");
+		exit(1);
+	}
+
+	QPression = xQueueCreate(10, sizeof(double));
+	if(QPression == NULL) {
+		printf("Erreur de création du message queue pression");
+		exit(1);
+	}
+
+	QVitesseAngulaire = xQueueCreate(20, sizeof(double));
+	if(QVitesseAngulaire == NULL) {
+		printf("Erreur de création du message queue vitesse angulaire");
+		exit(1);
+	}
 
 	xTaskCreate(vTask1a, "task 1A", 1000, NULL, 3, NULL);
 	printf("task 1A created \r\n");
@@ -174,6 +209,39 @@ void vTask2b( void *pvParameters )
 void vTask3( void *pvParameters )
 {
 
+	// On fait d'abord la moyenne de toutes les valeurs reçues
+
+	Donnees_LCD donnees_temp = Donnees_LCD();
+
+	while(xQueueReceive(QAcceleration, &(donnees_temp.acceleration), portMAX_DELAY) == pdTRUE) { donneesLCD.acceleration += donnees_temp.acceleration; }
+	donneesLCD.acceleration /= 10;
+
+	while(xQueueReceive(QAltitude, &(donnees_temp.altitude), portMAX_DELAY) == pdTRUE) { donneesLCD.altitude += donnees_temp.altitude; }
+	donneesLCD.altitude /= 10;
+
+	while(xQueueReceive(QAngle, &(donnees_temp.angle), portMAX_DELAY) == pdTRUE) {
+		donneesLCD.angle[0] += donnees_temp.angle[0];
+		donneesLCD.angle[1] += donnees_temp.angle[1];
+		donneesLCD.angle[2] += donnees_temp.angle[2];
+	}
+	donneesLCD.angle[0] /= 10;
+	donneesLCD.angle[1] /= 10;
+	donneesLCD.angle[2] /= 10;
+
+	while(xQueueReceive(QChampMagnetique, &(donnees_temp.champ_magnetique), portMAX_DELAY) == pdTRUE) { donneesLCD.champ_magnetique += donnees_temp.champ_magnetique }
+	donneesLCD.champ_magnetique /= 10;
+
+
+
+	while(xQueueReceive(QPression, &(donnees_temp.pression), portMAX_DELAY) == pdTRUE) {  }
+
+	xQueueReceive(QVitesseAngulaire, &(donnees_temp.vitesse_angulaire), portMAX_DELAY);
+	xQueueReceive(QTemperature, &(donnees_temp.temperature), portMAX_DELAY);
+
+	// Afficher sur le LCD
+	GUI(donneesLCD.angle[0], donneesLCD.angle[1], donneesLCD.angle[2], donneesLCD.altitude, donneesLCD.temperature);
+
+	vTaskDelete(NULL);
 
 }
 
