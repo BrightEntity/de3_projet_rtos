@@ -196,13 +196,36 @@ void vTask1b( void *pvParameters )
 
 void vTask2a( void *pvParameters )
 {
+	Donnees_LCD donnees_temp = Donnees_LCD();
+	int i = 0;
 
+	while(xQueueReceive(QChampMagnetique, &(donnees_temp.champ_magnetique), portMAX_DELAY) == pdTRUE) { donneesLCD.champ_magnetique += donnees_temp.champ_magnetique; i++; }
+	donneesLCD.champ_magnetique /= i;
+
+	while(xQueueReceive(QAcceleration, &(donnees_temp.acceleration), portMAX_DELAY) == pdTRUE) { donneesLCD.acceleration += donnees_temp.acceleration; i++; }
+	donneesLCD.acceleration /= i;
+
+	while(xQueueReceive(QVitesseAngulaire, &(donnees_temp.vitesse_angulaire), portMAX_DELAY) != pdTRUE) { donneesLCD.vitesse_angulaire += donnees_temp.vitesse_angulaire; i++; }
+	donneesLCD.vitesse_angulaire /= i;
+
+	donneesLCD.angle[0] = atan(donneesLCD.acceleration[0] / sqrt(pow(donneesLCD.acceleration[1],2) + pow(donneesLCD.acceleration[2],2) ) );
+	donneesLCD.angle[1] = atan(donneesLCD.acceleration[1] / sqrt(pow(donneesLCD.acceleration[0],2) + pow(donneesLCD.acceleration[2],2) ) );
+	donneesLCD.angle[2] = atan(donneesLCD.acceleration[2] / sqrt(pow(donneesLCD.acceleration[1],2) + pow(donneesLCD.acceleration[0],2) ) );
+
+	xQueueSend(QAngle, &donneesLCD.angle, portMAX_DELAY);
 
 }
 
 void vTask2b( void *pvParameters )
 {
+	Donnees_LCD donnees_temp = Donnees_LCD();
+	int i = 0;
+	while(xQueueReceive(QPression, &donnees_temp.pression, portMAX_DELAY) == pdTRUE) { donneesLCD.pression += donnees_temp; i++; }
+	donneesLCD.pression /= i;
 
+	donneesLCD.altitude = 44330 * (1 - pow(donneesLCD.pression / 101325.0, 1.0/5.255)) ; // Formule de conversion pression vers altitude
+
+	xQueueSend(QAltitude, &donnees_temp.altitude, portMAX_DELAY);
 
 }
 
@@ -213,8 +236,7 @@ void vTask3( void *pvParameters )
 
 	Donnees_LCD donnees_temp = Donnees_LCD();
 
-	while(xQueueReceive(QAcceleration, &(donnees_temp.acceleration), portMAX_DELAY) == pdTRUE) { donneesLCD.acceleration += donnees_temp.acceleration; }
-	donneesLCD.acceleration /= 10;
+
 
 	while(xQueueReceive(QAltitude, &(donnees_temp.altitude), portMAX_DELAY) == pdTRUE) { donneesLCD.altitude += donnees_temp.altitude; }
 	donneesLCD.altitude /= 10;
@@ -228,15 +250,14 @@ void vTask3( void *pvParameters )
 	donneesLCD.angle[1] /= 10;
 	donneesLCD.angle[2] /= 10;
 
-	while(xQueueReceive(QChampMagnetique, &(donnees_temp.champ_magnetique), portMAX_DELAY) == pdTRUE) { donneesLCD.champ_magnetique += donnees_temp.champ_magnetique }
-	donneesLCD.champ_magnetique /= 10;
+	while(xQueueReceive(QAltitude, &(donnees_temp.altitude), portMAX_DELAY) == pdTRUE) { donneesLCD.altitude += donnees_temp.altitude;  }
+	donneesLCD.altitude /= 10;
 
+	while(xQueueReceive(QTemperature, &(donnees_temp.temperature), portMAX_DELAY) == pdTRUE) {
+	   donneesLCD.temperature += donnees_temp.temperature;
+	}
+	donneesLCD.temperature /= 10;
 
-
-	while(xQueueReceive(QPression, &(donnees_temp.pression), portMAX_DELAY) == pdTRUE) {  }
-
-	xQueueReceive(QVitesseAngulaire, &(donnees_temp.vitesse_angulaire), portMAX_DELAY);
-	xQueueReceive(QTemperature, &(donnees_temp.temperature), portMAX_DELAY);
 
 	// Afficher sur le LCD
 	GUI(donneesLCD.angle[0], donneesLCD.angle[1], donneesLCD.angle[2], donneesLCD.altitude, donneesLCD.temperature);
